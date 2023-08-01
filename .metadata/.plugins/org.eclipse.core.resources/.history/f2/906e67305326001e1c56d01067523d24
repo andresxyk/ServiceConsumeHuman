@@ -1,0 +1,96 @@
+/**
+ * 
+ */
+package com.mx.lacomer.restws.servicethird;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.util.List;
+
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.StringHttpMessageConverter;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
+
+/**
+ * @author MXE01028159A
+ *
+ */
+public class ConsumoServiciosThird {
+
+
+	public static ResponseEntity<?> creaClientePostJsonRestMultiPart(Class<?> clazzResponse, List<File> fileList,
+			Object requestEntity, String url, String usr, String pwd) throws JsonParseException, JsonMappingException, IOException {
+
+		ResponseEntity<?> response;
+		try {
+			String json = toJson(requestEntity);
+
+			MultiValueMap<String, Object> parts = new LinkedMultiValueMap<String, Object>();
+			parts.add("input", json);
+			for (File file : fileList) {
+				FileSystemResource fileSystemResource = new FileSystemResource(file);
+				parts.add("files", fileSystemResource);
+
+			}
+
+			RestTemplate restTemplate = new RestTemplate();
+			HttpHeaders headers = new HttpHeaders();
+			headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+			if(usr!=null && pwd!=null && !usr.trim().equals(Constantes.EMPTY) && !pwd.trim().equals(Constantes.EMPTY))
+					headers.setBasicAuth(usr.trim(), pwd.trim());
+
+				
+			HttpEntity<MultiValueMap<String, Object>> request1 = new HttpEntity<>(parts, headers);
+			restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(Charset.forName(Constantes.UTF_8)));
+
+			logger.info("Request to: " + url);
+			logger.info(json);
+			response = restTemplate.exchange(url, HttpMethod.POST, request1, clazzResponse);
+			// response = restTemplate.postForEntity(url, request1, String.class);
+			logger.info("Response to: ");
+			logger.info(toJson(response.getBody()));
+			for (File file : fileList) {
+				file.delete();
+
+			}
+			return response;
+		} catch (HttpStatusCodeException ex) {
+			MessageErrorServicioProcesar messageErrorServicioProcesar = new ObjectMapper()
+					.readValue(ex.getResponseBodyAsString(), MessageErrorServicioProcesar.class);
+			response = new ResponseEntity<>(messageErrorServicioProcesar, HttpStatus.PRECONDITION_FAILED);
+			logger.info("Error al consumir el servicio: " + url + "---->" + response.getBody().toString());
+			logger.info("Error al consumir el servicio: " + url + "---->" + response.getHeaders().toString());
+			return response;
+		} catch (RestClientException e) {
+			MessageErrorServicioProcesar messageErrorServicioProcesar = new MessageErrorServicioProcesar();
+			logger.info("Error al consumir el servicio: " + url + "---->" + e.getMessage());
+			response = new ResponseEntity<>(messageErrorServicioProcesar, HttpStatus.PRECONDITION_FAILED);
+			
+			return response;
+		} catch (Exception e) {
+			logger.info("Error al consumir el servicio: " + url + "---->" + e.getMessage());
+			response = new ResponseEntity<>(e.getMessage(), HttpStatus.PRECONDITION_FAILED);
+			return response;
+		}
+
+	}
+
+	
+
+	private static String toJson(Object object) throws JsonProcessingException {
+		ObjectMapper om = new ObjectMapper();
+		return om.writerWithDefaultPrettyPrinter().writeValueAsString(object);
+	}
+
+}

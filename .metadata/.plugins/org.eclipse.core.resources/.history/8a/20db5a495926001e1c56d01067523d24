@@ -1,0 +1,106 @@
+/**
+ * 
+ */
+package com.mx.lacomer.restws.servicethird;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.Charset;
+
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.StringHttpMessageConverter;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
+
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mx.lacomer.restws.servicethird.util.Constantes;
+
+/**
+ * @author MXE01028159A
+ *
+ */
+public class ConsumoServiciosThird {
+
+
+	public static ResponseEntity<?> creaClientePostJsonRestMultiPart(Class<?> clazzResponse, File file,
+			String url, String code, Integer folderId,  Boolean signatureCoordinates, Boolean sendNotification, Boolean signatureStatus) throws JsonParseException, JsonMappingException, IOException {
+
+		ResponseEntity<?> response = null;
+		try {
+			System.clearProperty("http.proxyHost");
+			System.clearProperty("http.proxyPort");
+
+			MultiValueMap<String, Object> parts = new LinkedMultiValueMap<String, Object>();
+			parts.add("signatureCoordinates", signatureCoordinates);
+			FileSystemResource fileSystemResource = new FileSystemResource(file);
+			parts.add("file", fileSystemResource);
+			parts.add("folderId", folderId);
+			parts.add("sendNotification", sendNotification);
+			parts.add("signatureStatus", signatureStatus);
+			parts.add("name", fileSystemResource.getFilename());
+
+
+
+			RestTemplate restTemplate = new RestTemplate();
+			HttpHeaders headers = new HttpHeaders();
+			headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+			headers.setBasicAuth(code);
+			headers.add("Authorization", "Basic " + code);
+
+				
+			HttpEntity<MultiValueMap<String, Object>> request1 = new HttpEntity<>(parts, headers);
+			restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(Charset.forName(Constantes.UTF_8)));
+
+			System.out.println("Request to: " + url);
+			
+			response = restTemplate.exchange(url, HttpMethod.POST, request1, clazzResponse);
+			// response = restTemplate.postForEntity(url, request1, String.class);
+			System.out.println("Response to: ");
+			System.out.println(toJson(response.getBody()));
+			
+			return response;
+		} catch (HttpStatusCodeException ex) {
+			ex.printStackTrace();
+			
+	
+			return response;
+		} catch (RestClientException e) {
+			e.printStackTrace();
+			
+			return response;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return response;
+		}
+
+	}
+
+	
+
+	private static String toJson(Object object) throws JsonProcessingException {
+		ObjectMapper om = new ObjectMapper();
+		return om.writerWithDefaultPrettyPrinter().writeValueAsString(object);
+	}
+	
+	public static void main(String []args) {
+		try {
+			creaClientePostJsonRestMultiPart(String.class, new File("C:\\Users\\soporte\\Documents\\JUnit.pdf"), "https://api-prod.humand.co/public/api/v1/users/742506043/documents/files", "c4dpS-0u-L-e9TCa04DYlT6NfSagKQYr", 119218, false, false, false);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+
+}
