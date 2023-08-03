@@ -60,6 +60,46 @@ public class ConsumoServiciosThird {
 		}
 	}
 
+	public static String consumeService(String msj){
+		return msj;
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public static String consumeService(String strFile, String url, String code, String folderId,
+			String signatureCoordinates, String sendNotification, String signatureStatus, String allowDisagreement)
+			throws Exception {
+		turnOffSslChecking();
+		ResponseEntity<?> response = null;
+		try {
+			System.clearProperty("http.proxyHost");
+			System.clearProperty("http.proxyPort");
+			LinkedMultiValueMap linkedMultiValueMap = new LinkedMultiValueMap();
+			linkedMultiValueMap.add("signatureCoordinates", signatureCoordinates);
+			FileSystemResource fileSystemResource = new FileSystemResource(new File(strFile));
+			linkedMultiValueMap.add("file", fileSystemResource);
+			linkedMultiValueMap.add("folderId", Integer.valueOf(folderId));
+			linkedMultiValueMap.add("sendNotification", Boolean.valueOf(sendNotification));
+			linkedMultiValueMap.add("signatureStatus", signatureStatus);
+			linkedMultiValueMap.add("name", fileSystemResource.getFilename());
+			linkedMultiValueMap.add("allowDisagreement", Boolean.valueOf(allowDisagreement));
+			RestTemplate restTemplate = new RestTemplate();
+			HttpHeaders headers = new HttpHeaders();
+			headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+			headers.add("Authorization", "Basic " + code);
+			HttpEntity<MultiValueMap<String, Object>> request1 = new HttpEntity(linkedMultiValueMap,
+					(MultiValueMap) headers);
+			restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(Charset.forName("UTF-8")));
+			System.out.println("Request to: " + url);
+			response = restTemplate.exchange(url, HttpMethod.POST, request1, String.class, new Object[0]);
+			System.out.println("Response to: ");
+			System.out.println(toJson(response.getBody()));
+			return (String) response.getBody();
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			throw new Exception(ex.getMessage());
+		}
+	}
+
 	private static String toJson(Object object) throws JsonProcessingException {
 		ObjectMapper om = new ObjectMapper();
 		return om.writerWithDefaultPrettyPrinter().writeValueAsString(object);
