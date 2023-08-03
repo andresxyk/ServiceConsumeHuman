@@ -35,6 +35,16 @@ public class ConsumoServiciosThird {
 			System.clearProperty("http.proxyPort");
 			LinkedMultiValueMap linkedMultiValueMap = new LinkedMultiValueMap();
 			linkedMultiValueMap.add("signatureCoordinates", signatureCoordinates);
+			File fi = new File(strFile);
+			if (fi.exists()) {
+				if (fi.isFile()) {
+					if (fi.length() > 1000000) 
+						throw new Exception("Archivo *" + fi.getName() + "* mayor a 1 MB");
+				} else
+					throw new Exception("La ruta *" + strFile + "* especificada es de un directorio");
+
+			} else
+				throw new Exception("Archivo *" + fi.getName() + "* no existe");
 			FileSystemResource fileSystemResource = new FileSystemResource(new File(strFile));
 			linkedMultiValueMap.add("file", fileSystemResource);
 			linkedMultiValueMap.add("folderId", folderId);
@@ -55,12 +65,12 @@ public class ConsumoServiciosThird {
 			System.out.println(toJson(response.getBody()));
 			return (String) response.getBody();
 		} catch (Exception ex) {
-			ex.printStackTrace();
+
 			throw new Exception(ex.getMessage());
 		}
 	}
 
-	public static String consumeService(String msj){
+	public static String consumeService(String msj) {
 		return msj;
 	}
 
@@ -75,6 +85,17 @@ public class ConsumoServiciosThird {
 			System.clearProperty("http.proxyPort");
 			LinkedMultiValueMap linkedMultiValueMap = new LinkedMultiValueMap();
 			linkedMultiValueMap.add("signatureCoordinates", signatureCoordinates);
+			File fi = new File(strFile);
+			if (fi.exists()) {
+				if (fi.isFile()) {
+					if (fi.length() > 1000000) 
+						throw new Exception("Archivo *" + fi.getName() + "* mayor a 1 MB");
+				} else
+					throw new Exception("La ruta *" + strFile + "* especificada es de un directorio");
+
+			} else
+				throw new Exception("Archivo *" + fi.getName() + "* no existe");
+
 			FileSystemResource fileSystemResource = new FileSystemResource(new File(strFile));
 			linkedMultiValueMap.add("file", fileSystemResource);
 			linkedMultiValueMap.add("folderId", Integer.valueOf(folderId));
@@ -95,12 +116,12 @@ public class ConsumoServiciosThird {
 			System.out.println(toJson(response.getBody()));
 			return (String) response.getBody();
 		} catch (Exception ex) {
-			ex.printStackTrace();
+
 			throw new Exception(ex.getMessage());
 		}
 	}
 
-	private static String toJson(Object object) throws JsonProcessingException {
+	public static String toJson(Object object) throws JsonProcessingException {
 		ObjectMapper om = new ObjectMapper();
 		return om.writerWithDefaultPrettyPrinter().writeValueAsString(object);
 	}
@@ -130,11 +151,13 @@ public class ConsumoServiciosThird {
 	public static void main(String[] args) {
 		try {
 			String signatureCoordinates = "[{  \"page\": 1,  \"x\": 5,  \"y\": 5,  \"width\": 5,  \"height\": 5}]";
-			consumeService("test-4.pdf", "https://api-prod.humand.co/public/api/v1/users/742506043/documents/files",
+			consumeService("test-4.pdf",
+					"https://api-prod.humand.co/public/api/v1/users/742506043/documents/files",
 					"c4dpS-0u-L-e9TCa04DYlT6NfSagKQYr", Integer.valueOf(9221), signatureCoordinates,
 					Boolean.valueOf(false), "SIGNATURE_NOT_NEEDED", Boolean.valueOf(false));
 		} catch (Exception e) {
-			e.printStackTrace();
+			System.out.println(e.getMessage());
+
 		}
 	}
 }
